@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Semi Final Randomizer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: #0f172a;           /* slate-900 */
+      --panel: #0b1026aa;      /* translucent */
+      --card: #11193a;         /* deep indigo */
+      --accent: #60a5fa;       /* blue-400 */
+      --accent-2: #a78bfa;     /* violet-400 */
+      --text: #e5e7eb;         /* gray-200 */
+      --muted: #9ca3af;        /* gray-400 */
+      --danger: #ef4444;       /* red-500 */
+      --good: #22c55e;         /* green-500 */
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      /* Difficulty colors */
+      --diff-master: rgb(159, 54, 233);
+      --diff-expert: #ef4444;
+      --diff-hard: #f59e0b;
+      --diff-normal: #22c55e;
+      --diff-easy: #60a5fa;
+    }
+    *{ box-sizing: border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0; font-family:"Prompt", system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--text); background:
+        radial-gradient(1200px 600px at 10% -10%, #1d244d 0%, transparent 60%),
+        radial-gradient(1000px 800px at 120% 20%, #2a164e 0%, transparent 60%),
+        radial-gradient(900px 900px at 50% 120%, #0a2540 0%, transparent 60%),
+        var(--bg);
+      min-height:100%;
+    }
+
+    .container{ max-width:1100px; margin:40px auto; padding:24px; }
+    .hero{
+      background: linear-gradient(135deg, #0b122d, #131e46);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:20px; padding:24px 28px; box-shadow:var(--shadow);
+      text-align:center;
+    }
+    h1{ margin:0; font-size: clamp(20px, 2.4vw, 32px); font-weight:700; letter-spacing:.3px; }
+
+    .section{ margin-top:26px; }
+
+    /* Grid */
+    .grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(300px,1fr)); gap:14px; margin-top:16px; }
+    .tile{
+      position:relative; overflow:hidden; border-radius:16px; background:linear-gradient(180deg, #0e1736, #0b112b);
+      border:1px solid rgba(255,255,255,.06); box-shadow:var(--shadow); isolation:isolate;
+    }
+    .tile img{ width:100%; height:100%; display:block; object-fit:cover; }
+    .tile .label{
+      position:absolute; left:0; right:0; bottom:0; padding:10px 12px; font-size:13px; line-height:1.15;
+      background: linear-gradient(180deg, transparent, rgba(0,0,0,.6)); backdrop-filter: blur(2px);
+    }
+    .badge{ position:absolute; top:8px; left:8px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18); color:#fff; padding:4px 8px; border-radius:999px; font-size:11px; }
+
+    /* New: chip row */
+    .chip-row{ position:absolute; top:8px; right:8px; display:flex; gap:6px; flex-wrap:wrap; }
+    .chip{ padding:4px 8px; border-radius:999px; font-size:11px; font-weight:700; color:white; border:1px solid rgba(255,255,255,.15); box-shadow: 0 6px 14px rgba(0,0,0,.25); white-space:nowrap; }
+    .chip.level{ background:rgba(12,19,48,.75); }
+    .chip.diff-master{ background: linear-gradient(135deg, var(--diff-master), rgba(159,54,233,.82)); }
+    .chip.diff-expert{ background: linear-gradient(135deg, var(--diff-expert), rgba(239,68,68,.82)); }
+    .chip.diff-hard{ background: linear-gradient(135deg, var(--diff-hard), rgba(245,158,11,.82)); color:#0b1026; }
+    .chip.diff-normal{ background: linear-gradient(135deg, var(--diff-normal), rgba(34,197,94,.82)); color:#0b1026; }
+    .chip.diff-easy{ background: linear-gradient(135deg, var(--diff-easy), rgba(96,165,250,.82)); color:#0b1026; }
+
+
+    :root{ --diff-append: rgb(228,129,192); }
+    .chip.diff-append{ background: linear-gradient(135deg, var(--diff-append), rgba(228,129,192,.82)); }
+    .tile{ aspect-ratio: 1 / 1; }
+
+    /* Helper */
+    .muted{ color:var(--muted); }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="hero">
+      <h1>Semi Final Song List</h1>
+    </div>
+
+    <div class="section">
+      <h3 style="margin:.5rem 0 .25rem">รายการเพลง</h3>
+      <div id="image-grid" class="grid"></div>
+    </div>
+
+  </div>
+
+
+  <script>
+    // ===== Data =====
+    const images = [
+    { name: "Alter Ego (Master) [31]", src: "https://static.wikia.nocookie.net/projectsekai/images/f/f8/Alter_Ego_Game_Cover.png/revision/latest?cb=20240717154423" },
+    { name: "Egoist (Master) [31]", src: "https://static.wikia.nocookie.net/projectsekai/images/f/f5/Egoist_Game_Cover.png/revision/latest?cb=20230311000131" },
+    { name: "Non-breath oblige (Master) [31]", src: "https://static.wikia.nocookie.net/projectsekai/images/0/0a/Non-breath_oblige_Game_Cover.png/revision/latest?cb=20221130034648" },
+    { name: "Pheles (Append) [31]", src: "https://static.wikia.nocookie.net/projectsekai/images/0/0b/Pheles_Game_Cover.png/revision/latest?cb=20221231155313" },
+    { name: "Vampire's ∞ pathoS (Master) [31]", src: "https://static.wikia.nocookie.net/projectsekai/images/b/b1/Vampire%27s_%E2%88%9E_pathoS_Game_Cover.png/revision/latest?cb=20230330023653" },
+    { name: "MANHATTAN (Master) [32]", src: "https://static.wikia.nocookie.net/projectsekai/images/1/1e/MANHATTAN_Game_Cover.png/revision/latest?cb=20250330162024" },
+    { name: "CIRCUS PANIC!!! (Master) [32]", src: "https://static.wikia.nocookie.net/projectsekai/images/d/de/CIRCUS_PANIC%21%21%21_Game_Cover.png/revision/latest?cb=20230831083953" },
+    { name: "脳漿炸裂ガール (Master) [32]", src: "https://static.wikia.nocookie.net/projectsekai/images/4/43/Noushou_Sakuretsu_Girl_Game_Cover.png/revision/latest?cb=20220630160603" },
+    { name: "星界ちゃんと可不ちゃんのおつかい合騒曲 (Master) [32]", src: "https://static.wikia.nocookie.net/projectsekai/images/1/11/SEKAI-chan_to_KAFU-chan_no_Otsukai_Gassoukyoku_Game_Cover.png/revision/latest?cb=20230204161649" },
+    { name: "88☆彡 (Append) [32]", src: "https://static.wikia.nocookie.net/projectsekai/images/4/43/88%E2%98%86%E5%BD%A1_Game_Cover.png/revision/latest?cb=20220411032034" },
+    { name: "NEO (Append) [32]", src: "https://static.wikia.nocookie.net/projectsekai/images/c/c9/NEO_Game_Cover.png/revision/latest?cb=20230928120606" },
+    { name: "Ghost Rule (Master) [33]", src: "https://static.wikia.nocookie.net/projectsekai/images/1/19/Ghost_Rule_Game_Cover.png/revision/latest?cb=20211231000716" },
+    { name: "初音天地開闢神話 (Master) [33]", src: "https://static.wikia.nocookie.net/projectsekai/images/e/ee/Hatsune_Tenchikaibyaku_Shinwa_Game_Cover.png/revision/latest?cb=20240717154456" },
+    { name: "ぼくらの16bit戦争 (Master) [33]", src: "https://static.wikia.nocookie.net/projectsekai/images/b/b9/Bokura_no_16bit_Sensou_Game_Cover.png/revision/latest?cb=20220630161355" },
+    { name: "Iなんです (Append) [33]", src: "https://static.wikia.nocookie.net/projectsekai/images/6/6b/I_Nandesu_Game_Cover.png/revision/latest?cb=20221120071928" },
+    { name: "のだ (Append) [33]", src: "https://static.wikia.nocookie.net/projectsekai/images/8/8f/No_da_Game_Cover.png/revision/latest?cb=20241227110055" },
+    { name: "ダイジョブですか？ (Master) [34]", src: "https://static.wikia.nocookie.net/projectsekai/images/b/be/Daijoubu_Desu_ka%3F_Game_Cover.png/revision/latest?cb=20240709060046" },
+    { name: "東京テディベア (Append) [34]", src: "https://static.wikia.nocookie.net/projectsekai/images/8/85/Tokyo_Teddy_Bear_Game_Cover.png/revision/latest?cb=20240509022019" },
+    ];
+
+    // ===== Helpers =====
+    function parseSongMeta(raw){
+      var title = raw.trim();
+      var diff = null;
+      var level = null;
+      var lp = raw.lastIndexOf('(');
+      var rp = raw.lastIndexOf(')');
+      var lb = raw.lastIndexOf('[');
+      var rb = raw.lastIndexOf(']');
+      if(lp !== -1 && rp > lp){ diff = raw.slice(lp+1, rp).trim(); }
+      if(lb !== -1 && rb > lb){ var num = parseInt(raw.slice(lb+1, rb).trim(), 10); if(!Number.isNaN(num)) level = num; }
+      if(lp !== -1){ title = raw.slice(0, lp).trim(); }
+      return { title: title, diff: diff, level: level };
+    }
+
+    function diffClass(diff){
+      if(!diff) return 'diff-easy';
+      var d = diff.toLowerCase();
+      if(d.includes('append')) return 'diff-append';
+      if(d.includes('master')) return 'diff-master';
+      if(d.includes('expert')) return 'diff-expert';
+      if(d.includes('hard')) return 'diff-hard';
+      if(d.includes('normal')) return 'diff-normal';
+      return 'diff-easy';
+    }
+
+    function makeChip(text, cls){
+      var span = document.createElement('span');
+      span.className = 'chip ' + cls; span.textContent = text; return span;
+    }
+
+    function buildChipRow(meta){
+      var row = document.createElement('div'); row.className = 'chip-row';
+      if(meta.diff) row.appendChild(makeChip(meta.diff, diffClass(meta.diff)));
+      if(meta.level != null) row.appendChild(makeChip('Lv ' + meta.level, 'level'));
+      return row;
+    }
+
+    // ===== Render Grid =====
+    function renderImages(){
+      const imageGrid = document.getElementById("image-grid");
+      imageGrid.innerHTML = '';
+      images.forEach(function(image, index){
+        var meta = parseSongMeta(image.name);
+        var fig = document.createElement('figure'); fig.className = 'tile';
+
+        var img = document.createElement('img'); img.src = image.src; img.alt = meta.title;
+        var label = document.createElement('figcaption'); label.className = 'label'; label.textContent = meta.title;
+        var badge = document.createElement('div'); badge.className = 'badge'; badge.textContent = '#' + (index+1);
+        var chips = buildChipRow(meta);
+
+        fig.appendChild(img); fig.appendChild(label); fig.appendChild(badge); fig.appendChild(chips);
+        imageGrid.appendChild(fig);
+      });
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', renderImages);
+  </script>
+</body>
+</html>

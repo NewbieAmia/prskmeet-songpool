@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quarter Final Randomizer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg: #0f172a;           /* slate-900 */
+      --panel: #0b1026aa;      /* translucent */
+      --card: #11193a;         /* deep indigo */
+      --accent: #60a5fa;       /* blue-400 */
+      --accent-2: #a78bfa;     /* violet-400 */
+      --text: #e5e7eb;         /* gray-200 */
+      --muted: #9ca3af;        /* gray-400 */
+      --danger: #ef4444;       /* red-500 */
+      --good: #22c55e;         /* green-500 */
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      /* Difficulty colors */
+      --diff-master: rgb(159, 54, 233);
+      --diff-expert: #ef4444;
+      --diff-hard: #f59e0b;
+      --diff-normal: #22c55e;
+      --diff-easy: #60a5fa;
+    }
+    *{ box-sizing: border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0; font-family:"Prompt", system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      color:var(--text); background:
+        radial-gradient(1200px 600px at 10% -10%, #1d244d 0%, transparent 60%),
+        radial-gradient(1000px 800px at 120% 20%, #2a164e 0%, transparent 60%),
+        radial-gradient(900px 900px at 50% 120%, #0a2540 0%, transparent 60%),
+        var(--bg);
+      min-height:100%;
+    }
+
+    .container{ max-width:1100px; margin:40px auto; padding:24px; }
+    .hero{
+      background: linear-gradient(135deg, #0b122d, #131e46);
+      border:1px solid rgba(255,255,255,.06);
+      border-radius:20px; padding:24px 28px; box-shadow:var(--shadow);
+      text-align:center;
+    }
+    h1{ margin:0; font-size: clamp(20px, 2.4vw, 32px); font-weight:700; letter-spacing:.3px; }
+
+    .section{ margin-top:26px; }
+
+    /* Grid */
+    .grid{ display:grid; grid-template-columns: repeat(auto-fit, minmax(300px,1fr)); gap:14px; margin-top:16px; }
+    .tile{
+      position:relative; overflow:hidden; border-radius:16px; background:linear-gradient(180deg, #0e1736, #0b112b);
+      border:1px solid rgba(255,255,255,.06); box-shadow:var(--shadow); isolation:isolate;
+    }
+    .tile img{ width:100%; height:100%; display:block; object-fit:cover; }
+    .tile .label{
+      position:absolute; left:0; right:0; bottom:0; padding:10px 12px; font-size:13px; line-height:1.15;
+      background: linear-gradient(180deg, transparent, rgba(0,0,0,.6)); backdrop-filter: blur(2px);
+    }
+    .badge{ position:absolute; top:8px; left:8px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18); color:#fff; padding:4px 8px; border-radius:999px; font-size:11px; }
+
+    /* New: chip row */
+    .chip-row{ position:absolute; top:8px; right:8px; display:flex; gap:6px; flex-wrap:wrap; }
+    .chip{ padding:4px 8px; border-radius:999px; font-size:11px; font-weight:700; color:white; border:1px solid rgba(255,255,255,.15); box-shadow: 0 6px 14px rgba(0,0,0,.25); white-space:nowrap; }
+    .chip.level{ background:rgba(12,19,48,.75); }
+    .chip.diff-master{ background: linear-gradient(135deg, var(--diff-master), rgba(159,54,233,.82)); }
+    .chip.diff-expert{ background: linear-gradient(135deg, var(--diff-expert), rgba(239,68,68,.82)); }
+    .chip.diff-hard{ background: linear-gradient(135deg, var(--diff-hard), rgba(245,158,11,.82)); color:#0b1026; }
+    .chip.diff-normal{ background: linear-gradient(135deg, var(--diff-normal), rgba(34,197,94,.82)); color:#0b1026; }
+    .chip.diff-easy{ background: linear-gradient(135deg, var(--diff-easy), rgba(96,165,250,.82)); color:#0b1026; }
+
+
+    :root{ --diff-append: rgb(228,129,192); }
+    .chip.diff-append{ background: linear-gradient(135deg, var(--diff-append), rgba(228,129,192,.82)); }
+    .tile{ aspect-ratio: 1 / 1; }
+
+    /* Helper */
+    .muted{ color:var(--muted); }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="hero">
+      <h1>Quarter Final Song List</h1>
+    </div>
+
+    <div class="section">
+      <h3 style="margin:.5rem 0 .25rem">รายการเพลง</h3>
+      <div id="image-grid" class="grid"></div>
+    </div>
+
+  </div>
+
+
+  <script>
+    // ===== Data =====
+    const images = [
+    { name: "RAD DOGS (Master) [30]", src: "https://static.wikia.nocookie.net/projectsekai/images/8/83/RAD_DOGS_Game_Cover.png/revision/latest?cb=20210129124019" },
+    { name: "Opera! Space Opera! (Master) [30]", src: "https://static.wikia.nocookie.net/projectsekai/images/e/e3/Opera%21_Space_Opera%21_Game_Cover.png/revision/latest?cb=20240529130855" },
+    { name: "Shanti (Master) [30]", src: "https://static.wikia.nocookie.net/projectsekai/images/4/4c/SHANTI_Game_Cover.png/revision/latest?cb=20230519080116" },
+    { name: "Hurray (Master) [30]", src: "https://static.wikia.nocookie.net/projectsekai/images/0/0e/Hurray_Game_Cover.png/revision/latest?cb=20221123025635" },
+    { name: "Flyway (Append) [30]", src: "https://static.wikia.nocookie.net/projectsekai/images/7/75/Flyway_Game_Cover.png/revision/latest?cb=20230121094946" },
+    { name: "右肩の蝶 (Master) [31]", src: "https://static.wikia.nocookie.net/projectsekai/images/8/8f/Migikata_no_Chou_Game_Cover.png/revision/latest?cb=20211011120736" },
+    { name: "徳川カップヌードル禁止令 (Master) [31]", src: "https://static.wikia.nocookie.net/projectsekai/images/a/a9/Tokugawa_Cup_Noodle_Kinshirei_Game_Cover.png/revision/latest?cb=20220428035549" },
+    { name: "魔法みたいなミュージック！(Master) [31]", src: "https://static.wikia.nocookie.net/projectsekai/images/1/1e/Mahou_Mitai_na_Music%21_Game_Cover.png/revision/latest?cb=20221219043010" },
+    { name: "D/N/A (Master) [31]", src: "https://static.wikia.nocookie.net/projectsekai/images/a/af/DNA_Game_Cover.png/revision/latest?cb=20250320060054" },
+    { name: "庭師のおはなしによると (Master) [31]", src: "https://static.wikia.nocookie.net/projectsekai/images/2/29/Niwashi_no_Ohanashi_ni_Yoru_to_Game_Cover.png/revision/latest?cb=20250623024234" },
+    { name: "気まぐれメルシィ (Master) [31]", src: "https://static.wikia.nocookie.net/projectsekai/images/3/30/Kimagure_Mercy_Game_Cover.png/revision/latest?cb=20221231185811" },
+    { name: "脱法ロック (Master) [31]", src: "https://static.wikia.nocookie.net/projectsekai/images/1/19/Dappou_Rock_Game_Cover.png/revision/latest?cb=20201108133250" },
+    { name: "ももいろの鍵 (Master) [31]", src: "https://static.wikia.nocookie.net/projectsekai/images/e/ef/Momoiro_no_Kagi_Game_Cover.png/revision/latest?cb=20230428142419" },
+    { name: "新人類 (Master) [31]", src: "https://static.wikia.nocookie.net/projectsekai/images/b/b1/Shinjinrui_Game_Cover.png/revision/latest?cb=20230803203018" },
+    { name: "私の恋はヘルファイア (Master) [31]", src: "https://static.wikia.nocookie.net/projectsekai/images/c/cf/Watashi_no_Koi_wa_Hellfire_Game_Cover.png/revision/latest?cb=20230330024017" },
+    { name: "Happy Halloween (Master) [31]", src: "https://static.wikia.nocookie.net/projectsekai/images/2/2a/Happy_Halloween_Game_Cover.png/revision/latest?cb=20240717154534" },
+    { name: "Bug (Append) [31]", src: "https://static.wikia.nocookie.net/projectsekai/images/e/e9/Bug_Game_Cover.png/revision/latest?cb=20220610072829" },
+    { name: "一千光年 (Append) [31]", src: "https://static.wikia.nocookie.net/projectsekai/images/8/80/Issen_Kounen_Game_Cover.png/revision/latest?cb=20231231095304" },
+    { name: "熱異常 (Master) [32]", src: "https://static.wikia.nocookie.net/projectsekai/images/3/36/Netsu_Ijou_Game_Cover.png/revision/latest?cb=20240509022123" },
+    { name: "fixer (Master) [32]", src: "https://static.wikia.nocookie.net/projectsekai/images/8/8d/Fixer_Game_Cover.png/revision/latest?cb=20220113160412" },
+    { name: "FUTURE EVE (Master) [32]", src: "https://static.wikia.nocookie.net/projectsekai/images/d/d7/FUTURE_EVE_Game_Cover.png/revision/latest?cb=20220831230857" },
+    { name: "拝啓ドッペルゲンガー (Master) [32]", src: "https://static.wikia.nocookie.net/projectsekai/images/c/c5/Haikei_Doppelganger_Game_Cover.png/revision/latest?cb=20211002095920" },
+    { name: "Bitter Choco Decoration (Master) [32]", src: "https://static.wikia.nocookie.net/projectsekai/images/a/ad/Bitter_Choco_Decoration_Game_Cover.png/revision/latest?cb=20210721120930" },
+    { name: "地球最後の告白を (Append) [32]", src: "https://static.wikia.nocookie.net/projectsekai/images/8/8c/Chikyuu_Saigo_no_Kokuhaku_wo_Game_Cover.png/revision/latest?cb=20210712150201" },
+    ];
+
+    // ===== Helpers =====
+    function parseSongMeta(raw){
+      var title = raw.trim();
+      var diff = null;
+      var level = null;
+      var lp = raw.lastIndexOf('(');
+      var rp = raw.lastIndexOf(')');
+      var lb = raw.lastIndexOf('[');
+      var rb = raw.lastIndexOf(']');
+      if(lp !== -1 && rp > lp){ diff = raw.slice(lp+1, rp).trim(); }
+      if(lb !== -1 && rb > lb){ var num = parseInt(raw.slice(lb+1, rb).trim(), 10); if(!Number.isNaN(num)) level = num; }
+      if(lp !== -1){ title = raw.slice(0, lp).trim(); }
+      return { title: title, diff: diff, level: level };
+    }
+
+    function diffClass(diff){
+      if(!diff) return 'diff-easy';
+      var d = diff.toLowerCase();
+      if(d.includes('append')) return 'diff-append';
+      if(d.includes('master')) return 'diff-master';
+      if(d.includes('expert')) return 'diff-expert';
+      if(d.includes('hard')) return 'diff-hard';
+      if(d.includes('normal')) return 'diff-normal';
+      return 'diff-easy';
+    }
+
+    function makeChip(text, cls){
+      var span = document.createElement('span');
+      span.className = 'chip ' + cls; span.textContent = text; return span;
+    }
+
+    function buildChipRow(meta){
+      var row = document.createElement('div'); row.className = 'chip-row';
+      if(meta.diff) row.appendChild(makeChip(meta.diff, diffClass(meta.diff)));
+      if(meta.level != null) row.appendChild(makeChip('Lv ' + meta.level, 'level'));
+      return row;
+    }
+
+    // ===== Render Grid =====
+    function renderImages(){
+      const imageGrid = document.getElementById("image-grid");
+      imageGrid.innerHTML = '';
+      images.forEach(function(image, index){
+        var meta = parseSongMeta(image.name);
+        var fig = document.createElement('figure'); fig.className = 'tile';
+
+        var img = document.createElement('img'); img.src = image.src; img.alt = meta.title;
+        var label = document.createElement('figcaption'); label.className = 'label'; label.textContent = meta.title;
+        var badge = document.createElement('div'); badge.className = 'badge'; badge.textContent = '#' + (index+1);
+        var chips = buildChipRow(meta);
+
+        fig.appendChild(img); fig.appendChild(label); fig.appendChild(badge); fig.appendChild(chips);
+        imageGrid.appendChild(fig);
+      });
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', renderImages);
+  </script>
+</body>
+</html>
